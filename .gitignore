@@ -1,1 +1,5 @@
 *.exe
+dist
+# python
+build
+*.spec
