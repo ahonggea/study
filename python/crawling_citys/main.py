@@ -2,7 +2,7 @@
 Author: ahonggea🚧
 Date: 2023-05-30 20:52:42
 LastEditors: ahonggea🚧
-LastEditTime: 2023-06-06 12:03:40
+LastEditTime: 2023-06-06 17:16:49
 Description: file content
 '''
 # %%
@@ -13,20 +13,23 @@ from  requests import get
 from lxml import etree
 # 国家网行政规划地址
 DEFULT_BASE_URL='https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html'
-BASE_URL = input (f'请输入要抓取的国家网行政区划地址:\n默认:{DEFULT_BASE_URL}：') or  DEFULT_BASE_URL
+BASE_URL = input (f'请输入要抓取的国家网行政区划地址:\n默认[{DEFULT_BASE_URL}]：') or  DEFULT_BASE_URL
 # 腾讯地图
 TENCENT_MAP_URL='https://apis.map.qq.com'
 DEFAULT_TENCENT_MAP_KEY='XQCBZ-IG6CI-SHTGB-5CXJN-IVYRJ-WCFSJ'
-TENCENT_MAP_KEY=input(f'请输入腾讯地图API的key:\n默认:{DEFAULT_TENCENT_MAP_KEY}') or DEFAULT_TENCENT_MAP_KEY
+TENCENT_MAP_KEY=input(f'请输入腾讯地图API的key:\n默认[{DEFAULT_TENCENT_MAP_KEY}]:') or DEFAULT_TENCENT_MAP_KEY
 
 # 特殊市区编号
 SPECIAL_CITY_CODE_PID={
+    '1101':'110000',
+    '1201':'120000',
+    '3101':'310000',
     '4190':"411700",
     '4290':"422800",
     '4690':"460400",
-    '5001':"500000",
-    '5002':"500000",
-    '6590':'654300'
+    '6590':'654300',
+    '5001':'500000',
+    '5002':'500000',
 }
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
@@ -73,7 +76,6 @@ def main():
     # 组装数据
     datas = []
     def pushData(code,pid,level):
-        global datas
         if code not  in cityDict:
             print(f'未找到{code}的资料')
             return
@@ -84,8 +86,8 @@ def main():
             name=item['name']
         datas.append({
             'CityCode':code,
-            'CityName':name,
-            'SimpleName':fullname,
+            'CityName':fullname,
+            'SimpleName':name,
             'Pid':pid,
             'Lng':item['location']['lng'],
             'Lat':item['location']['lat'],
@@ -124,8 +126,11 @@ def main():
             pid = provinceCode+"00"
             if provinceCode in SPECIAL_CITY_CODE_PID:
                 pid = SPECIAL_CITY_CODE_PID[provinceCode]
+            if pid in level_1_codes:
+                    pushData(code=code,pid=pid,level=2)
+                    continue
             # 如果不在level2里面，一般为直辖市，为保证数据完整性，加回去
-            if pid not in level_2_codes:
+            elif pid not in level_2_codes :
                 ppid=  pid[0:2]+"0000"
                 level_2_codes.append(pid)
                 # 字典增加不存在城市
@@ -146,3 +151,4 @@ def main():
         writer.writerows(datas)
 
     # %%
+main()
